@@ -1,0 +1,11 @@
+version: '2'
+services:
+    php:
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        container_name: phpFpm_81
+#        image: local/my_phpfpm:8.0
+        image: registry.gitlab.com/dimeo/saturndockers/loc/php_fpm:8.1
+        restart: always
+

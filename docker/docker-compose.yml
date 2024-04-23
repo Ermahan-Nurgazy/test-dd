@@ -1,0 +1,50 @@
+version: '2'
+services:
+    nginx_forms:
+        build:
+            context: .
+            dockerfile: ./nginx/Dockerfile
+        container_name: forms_nginx81
+        restart: always
+        ports:
+            - "80:80"
+            - "8082:8082"
+        volumes:
+            - ../app:/var/www/dd
+        networks:
+            docker_net:
+                aliases:
+                    - dd.loc
+    php_forms:
+        build:
+            context: .
+            dockerfile: ./php/Dockerfile
+        container_name: php
+        restart: always
+        volumes:
+            - ../app:/var/www/dd
+        networks:
+            - docker_net
+    db:
+        image: mysql:5.7
+        restart: always
+        environment:
+            MYSQL_DATABASE: 'dd'
+            MYSQL_USER: 'dd'
+            MYSQL_PASSWORD: 'qwerty'
+            MYSQL_ROOT_PASSWORD: 'root'
+        ports:
+            - '3306:3306'
+        expose:
+            - '3306'
+        volumes:
+            - my-db:/var/lib/mysql
+        networks:
+            - docker_net
+volumes:
+    my-db:
+networks:
+    docker_net:
+        external:
+            name: docker_net
+
