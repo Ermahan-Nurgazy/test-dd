@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  mysql:
+    image: 'mysql:8.0'
+    working_dir: /www
+    volumes:
+      - './docker/mysql:/var/lib/mysql'
+      - '.:/www'
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=app
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=qwerty
+    ports:
+      - '3306:3306'
+    networks:
+      - app_network
+
+  nginx:
+    image: 'nginx:alpine'
+    working_dir: /www
+    volumes:
+      - '.:/www'
+      - './docker/nginx/default.conf:/etc/nginx/conf.d/default.conf'
+    ports:
+      - '80:80'
+    networks:
+      - app_network
+
+  php:
+    build:
+      context: docker/php
+    expose:
+      - 9003
+    working_dir: /www
+    volumes:
+      - '.:/www'
+      - /tmp/xdebug:/tmp/xdebug
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: 'bridge'
