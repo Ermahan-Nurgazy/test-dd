@@ -2,69 +2,77 @@
 
 namespace app\models;
 
-class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
-{
-    public $id;
-    public $username;
-    public $password;
-    public $authKey;
-    public $accessToken;
+use Yii;
+use yii\db\ActiveRecord;
 
-    private static $users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            'password' => 'admin',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            'password' => 'demo',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
+/**
+ * @property int $id
+ * @property string $email
+ * @property string $city
+ * @property string $address
+ * @property string $auth_key
+ * @property string $password_hash
+ * @property string $access_token
+ * @property string $access_token_expire
+ */
+class User extends ActiveRecord implements \yii\web\IdentityInterface
+{
+
+    /**
+     * @return string
+     */
+    public static function tableName()
+    {
+        return '{{%user}}';
+    }
+
+    public function rules()
+    {
+        return [
+            ['email', 'email'],
+            [['access_token', 'access_token_expire'], 'safe'],
+        ];
+    }
 
 
     /**
-     * {@inheritdoc}
+     * @param int $id
+     * @return static|null
      */
     public static function findIdentity($id)
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return static::findOne(['id' => $id]);
     }
 
     /**
-     * {@inheritdoc}
+     * @param int $id
+     * @return static|null
+     */
+    public static function findById($id)
+    {
+        return static::findOne(['id' => $id]);
+    }
+
+    /**
+     * @param string $email
+     * @return static|null
+     */
+    public static function findByEmail($email)
+    {
+        return static::findOne(['email' => $email]);
+    }
+
+    /**
+     * @param mixed $token
+     * @param $type
+     * @return static|null
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        foreach (self::$users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Finds user by username
-     *
-     * @param string $username
-     * @return static|null
-     */
-    public static function findByUsername($username)
-    {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return static::find()
+            ->andWhere(['access_token' => $token])
+            ->andWhere(['>=', 'access_token_expire', date('Y-m-d H:i:s')])
+            ->one();
     }
 
     /**
@@ -80,7 +88,7 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
      */
     public function getAuthKey()
     {
-        return $this->authKey;
+        return $this->auth_key;
     }
 
     /**
@@ -88,7 +96,7 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
      */
     public function validateAuthKey($authKey)
     {
-        return $this->authKey === $authKey;
+        return $this->auth_key === $authKey;
     }
 
     /**
@@ -99,6 +107,41 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
      */
     public function validatePassword($password)
     {
-        return $this->password === $password;
+        return Yii::$app->security->validatePassword($password, $this->password_hash);
+    }
+
+    /**
+     * Generates access token
+     */
+    public function generateAccessToken()
+    {
+        $token = md5(Yii::$app->security->generateRandomString());
+        if (static::findOne(['access_token' => $token])) {
+            $this->generateAccessToken();
+        }
+
+        $this->access_token = $token;
+        $this->access_token_expire = date('Y-m-d H:i:s', time() + 60 * 60 * 24 * 365);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getAccessToken()
+    {
+        if (!$this->access_token || $this->access_token_expire <= date('Y-m-d H:i:s')) {
+            $this->generateAccessToken();
+            $this->save();
+        }
+
+        return $this->access_token;
+    }
+
+    /**
+     * Generates "remember me" authentication key
+     */
+    public function generateAuthKey()
+    {
+        $this->auth_key = Yii::$app->security->generateRandomString();
     }
 }
