@@ -19,8 +19,8 @@ class m241231_074341_create_post_table extends Migration
             'description' => $this->text(),
             'audio_file' => $this->string()->notNull(),
             'status' => $this->boolean(),
-            'created_at' => $this->timestamp(),
-            'updated_at' => $this->timestamp()
+            'created_at' => $this->string(),
+            'updated_at' => $this->string()
         ]);
         $this->addForeignKey('fk_post_user', 'post', 'user_id', 'user', 'id', 'CASCADE');
     }

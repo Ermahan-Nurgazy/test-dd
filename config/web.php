@@ -18,6 +18,7 @@ $config = [
             'parsers' => [
                 'application/json' => 'yii\web\JsonParser',
             ],
+            'baseUrl' => ''
         ],
         'response' => [
             'format' =>  \yii\web\Response::FORMAT_JSON
