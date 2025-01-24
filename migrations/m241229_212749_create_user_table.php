@@ -20,22 +20,6 @@ class m241229_212749_create_user_table extends Migration
             'access_token' => $this->string(32)->notNull(),
             'access_token_expire' => $this->timestamp()->notNull(),
         ]);
-
-        $this->insert('{{%user}}', [
-            'email' => 'admin@admin.com',
-            'password_hash' =>  Yii::$app->security->generatePasswordHash('qwerty'),
-            'auth_key' =>  Yii::$app->security->generateRandomString(),
-            'access_token' =>  md5(Yii::$app->security->generateRandomString()),
-            'access_token_expire' =>  date('Y-m-d H:i:s', time() + 60 * 60 * 24 * 365)
-        ]);
-
-        $this->insert('{{%user}}', [
-            'email' => 'test@test.com',
-            'password_hash' =>  Yii::$app->security->generatePasswordHash('qwerty'),
-            'auth_key' =>  Yii::$app->security->generateRandomString(),
-            'access_token' =>  md5(Yii::$app->security->generateRandomString()),
-            'access_token_expire' =>  date('Y-m-d H:i:s', time() + 60 * 60 * 24 * 365)
-        ]);
     }
 
     /**

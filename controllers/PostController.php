@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use app\models\Post;
 use Yii;
+use yii\data\ActiveDataProvider;
 use yii\filters\auth\HttpBearerAuth;
 use yii\rest\Controller;
 use yii\web\ForbiddenHttpException;
@@ -22,6 +23,19 @@ class PostController extends Controller
         return $behaviors;
     }
 
+    public function actionIndex()
+    {
+        $query = Post::find()->with('tags');
+
+        $tags = Yii::$app->request->get('tags');
+        if (!empty($tags)) {
+            $query->joinWith('tags')->andWhere(['tag.name' => $tags]);
+        }
+
+        return ['success' => true, 'data' => $query->asArray()->all()];
+    }
+
+
     public function actionCreate()
     {
         $data = Yii::$app->request->post();
@@ -34,6 +48,11 @@ class PostController extends Controller
 
         if (!$model->save())
             return ['success' => false, 'errors' => $model->getErrors()];
+
+        if (!empty($data['tags'])) {
+            $tags = json_decode($data['tags']);
+            $model->addTags($tags);
+        }
 
         return [
             'success' => true,
@@ -66,7 +85,8 @@ class PostController extends Controller
             return ['success' => false, 'errors' => $model->getErrors()];
 
         if (!empty($data['tags'])) {
-            $model->addTags($data['tags']);
+            $tags = json_decode($data['tags']);
+            $model->addTags($tags);
         }
 
         return [

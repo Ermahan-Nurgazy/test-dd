@@ -113,15 +113,21 @@ class Post extends \yii\db\ActiveRecord
      */
     public function addTags(array $tags)
     {
-        $this->unlinkAll('tag', true);
+        $this->unlinkAll('tags', true);
         foreach ($tags as $tagName) {
             $tag = Tag::findOne(['name' => $tagName]);
             if (!$tag) {
                 $tag = new Tag(['name' => $tagName]);
                 $tag->save();
             }
-            $this->link('tag', $tag);
+            $this->link('tags', $tag);
         }
+    }
+
+    public function getTags()
+    {
+        return $this->hasMany(Tag::class, ['id' => 'tag_id'])
+            ->viaTable('post_tag', ['post_id' => 'id']);
     }
 
     /**
