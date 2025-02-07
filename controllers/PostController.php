@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\models\Post;
+use app\models\PostSearch;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\filters\auth\HttpBearerAuth;
@@ -25,14 +26,14 @@ class PostController extends Controller
 
     public function actionIndex()
     {
-        $query = Post::find()->with('tags');
+        $searchModel = new PostSearch();
+        $searchModel->load(Yii::$app->request->get(), '');
 
-        $tags = Yii::$app->request->get('tags');
-        if (!empty($tags)) {
-            $query->joinWith('tags')->andWhere(['tag.name' => $tags]);
+        if (!$searchModel->validate()) {
+            return false;
         }
 
-        return ['success' => true, 'data' => $query->asArray()->all()];
+        return ['success' => true, 'data' => $searchModel->search()];
     }
 
 
@@ -80,6 +81,14 @@ class PostController extends Controller
         $data = Yii::$app->request->post();
         if (!$model->load($data, ''))
             return ['success' => false];
+
+        $file = UploadedFile::getInstanceByName('audio_file');
+        if ($file) {
+            if ($model->audio_file && file_exists($model->audio_file)) {
+                unlink($model->audio_file);
+            }
+            $model->audio_file = $model->uploadAudioFile($file);
+        }
 
         if (!$model->save())
             return ['success' => false, 'errors' => $model->getErrors()];

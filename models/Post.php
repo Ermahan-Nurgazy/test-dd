@@ -19,6 +19,7 @@ use yii\web\UploadedFile;
  * @property string|null $updated_at
  *
  * @property PostTag[] $postTags
+ * @property Tag[] $tags
  * @property User $user
  */
 class Post extends \yii\db\ActiveRecord
@@ -85,12 +86,13 @@ class Post extends \yii\db\ActiveRecord
     {
         $filePath = 'uploads/'. uniqid() . '.mp3';
 
-        if ($file->saveAs($filePath)) {
-            $this->compressAudioFile($filePath);
-            return $filePath;
+        if (!$file->saveAs($filePath)) {
+            return false;
         }
 
-        return false;
+        $this->compressAudioFile($filePath);
+
+        return $filePath;
     }
 
     /**
